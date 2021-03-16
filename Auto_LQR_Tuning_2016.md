@@ -40,7 +40,7 @@ First, Marco et al. determine the state-feedback control for the non-linear syst
 
 * The objective is to minimize $J(\theta)$ by varying the parameters $\theta$. In particular, the optimization problem is given by  $\text{arg} \ \text{min} \ J(\theta) \ \text{s.t.} \ \theta \in \mathcal{D}.$ In other words, the search-space for the parameters $\theta$ is restricted to $\mathcal{D}$. 
 
-* However, note that the cost function $J$ cannot be determined from the experimental data as we observe with $J$ that it represents an infinite horizon problem. Hence, the approximate cost function $\hat{J}= \frac{1}{K} [\sum_{k=0}^{K-1}x_k^TQx_k+u_k^TRu_k]$.
+* However, note that the cost function $J$ cannot be determined from the experimental data as we observe with $J$ that it represents an infinite horizon problem. Hence, consider the approximate cost function $\hat{J}= \frac{1}{K} [\sum_{k=0}^{K-1}x_k^TQx_k+u_k^TRu_k]$.
 
 
 ### Comments

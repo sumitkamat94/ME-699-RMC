@@ -6,38 +6,42 @@
 @def hasmath = true
 @def review = true
 @def tags = ["reviews","learning","control","analysis","optimization"]
-@def reviewers = ["Sumit Kamat"]
+@def reviewers = ["Sumit Suryakant Kamat"]
 
 \toc
-### Broad area/overview
-This paper deals with controlling mobile robots directly from sensor data or measurements. It uses tools from supervised machine learning to learn these controllers from data, and Lyapunov-based methods to analyze the correctness of these learned controllers.
+### Overview / Broad Area
+Developing an accurate mathematical model of a physical dynamic system can be challenging, time-intensive, and expensive. Furthermore, the mathematical model of the physical dynamic system may not account for parametric uncertanities, non-linearities, unmodeled dynamics, and disturbances due to limitations of the sensors. If a controller is tuned without considering model uncertainities, then the controller might not achieve the required performance. This motivates the tuning of controller gains using experimental data, as it would reduce the effects of the above-mentioned uncertainities. 
+
+However, tuning of controller gains using methods such as grid search is time-intensive and might require multiple experimental. This necessitates the development of efficient algorithms for obtaining controller gains.
+
+This paper proposes a framework for tuning Linear Quadratic Regulator (LQR) gains by combining linear optimal control with Bayesian optimization. 
+
+[//]: # (Bayesian Optimization involves solving optimization problems where the objective function is continuous but does not have a special structure for e.g.; concavity. Furthermore, the objective function does not give gradient information.)
 
 ### Notation
-* $x$: state, $X$: State space
-* $y$: measurement, $Y$: Measurement Space
-* Controller $u = g(y)$
-* $L$: Set of labels
-* $C_X \colon X \to L$: Classifier in state space
-* $C_Y \colon Y \to L$: Classifier in measurement space
-* $V$: Lyapunov function
-* $W$: set of hyperplanes that parametrizes $C_X$
-* $W^\Delta$: set of hyperplanes that parametrizes a robust version of $C_X$
-
-### Specific Problem
-Instead of estimating the state of the system for feedback control of the form $u = k(x)$, the approach tries to classify measurements into classes that indicate the control to be used. The control design problem becomes a classifier design problem, often solved using supervised machine learning.  
-
-Supervised machine learning uses generalization error to evaluate the learning, where the error is related to a loss function. For control systems, we evaluate controllers based on closed-loop stability and behavior. The paper formulates a supervised learning problem where the closed-loop stability properties also affect the learning.  
+* $x_k$: discrete state, $\tilde{x}_k$: approximate discrete state
+* $A_{\text{n}}$, $B_{\text{n}}$: Nominal plant parameters
+* $u_k$: Control, $w_k$: noise
+* $J$: Nominal Quadratic cost function
+* $\hat{J}$: Approximate cost function
+* $\mathcal{D} \sub \mathbb{R}^D$: Doman representing region around nominal design
 
 
-### Solution Ideas
-* The paper distinguishes between the measurement space $Y$ and the state space $X$ of the dynamical system being controlled. It assumes that there is a relationship $Y = \mathcal H(x)$, which is unknown but implictly captured by data comprising pairs of states ann measurements in those states. For example, the camera image a robot gets when it is some position and heading in a room.
-* The classifier $C_X$ it learns is parametrized by a collection of hyperplanes $W$, that divides the state space into polyhedral regions. In effect, multiple binary classifiers are combined to get a multi-label classifier.
-* Given this division of the state space $X$, the authors parametrize a piecewise Linear Lyapunov function $V$, and formulate stability conditions for the pieces.
-* Using some mathematical results, these stability conditions become constraints on the the classifier hyperplanes $W$ and the Lyapunov function $V$.
-* The constraints define an optimization problem, so that they can be combined with the supervised learning constraints to create a single optimization problem.
-* If the solution has a certain value, then the controller design is correct in the state space.
-* The classifier $C_X$ designed in state-space needs to be converted into a classifier $C_Y$ of measurements, which is done using another supervised learning problem
-* Since this transformation is imperfect, the authors account for potential inaccuracies by solving a robust version of the optimization problem to train $W^\Delta$.
+### Problem Statement
+Consider the non-linear discrete model $x_{k+1}=f(x_k,u_k,w_k)$, where $x_k \in \mathbb{R}^{n_x}$ and $u_k \in \mathbb{R}^{n_u}$ is the control. The non-linear discrete model has an equilibrium at $x_k=0$, $u_k=0$, and $w_k=0$. The non-linear system can be approximated as a linear discrete (nominal) model $\tilde{x}_{k+1}=A_n \tilde{x}_{k} +B_n u_k+w_k$ about the equilibirirum. 
+
+The nominal cost function is given by $J=\lim_{K \to \infty} \frac{1}{K}\mathbb{E} [\sum_{k=0}^{K-1}x_k^TQx_k+u_k^TRu_k]$, where $Q$ and $R$ are positive-definite weigthing matrices. The objective is to determine the optimal control method which would minimize the cost function, while using data efficiently from fewer experiments. 
+
+### Solution 
+ 
+First, Marco et al. determine the state-feedback control for the non-linear system which would minimize the cost function $J$.
+* LQR control given by $u_k=Fx_k$ minimizes the nominal cost function $J$; where $F=\text{lqr} (A_{n},B_{n},Q,R)$. 
+* The controller gain can be parameterized as $F=\text{lqr} (A_{n},B_{n},W_x(\theta),W_u(\theta))$. It follows that $J=J(\theta)$. 
+
+* The objective is to minimize $J(\theta)$ by varying the parameters $\theta$. In particular, the optimization problem is given by  $\text{arg} \ \text{min} \ J(\theta) \ \text{s.t.} \ \theta \in \mathcal{D}.$ In other words, the search-space for the parameters $\theta$ is restricted to $\mathcal{D}$. 
+
+* However, note that the cost function $J$ cannot be determined from the experimental data as we observe with $J$ that it represents an infinite horizon problem. Hence, the approximate cost function $\hat{J}= \frac{1}{K} [\sum_{k=0}^{K-1}x_k^TQx_k+u_k^TRu_k]$.
+
 
 ### Comments
 * The paper focuses on a single example of a path-following robot.
